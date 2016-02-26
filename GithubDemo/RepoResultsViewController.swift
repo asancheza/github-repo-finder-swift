@@ -7,15 +7,20 @@ import UIKit
 import MBProgressHUD
 
 // Main ViewController
-class RepoResultsViewController: UIViewController {
+class RepoResultsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     var searchBar: UISearchBar!
     var searchSettings = GithubRepoSearchSettings()
 
     var repos: [GithubRepo]!
 
+    @IBOutlet weak var tableView: UITableView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.dataSource = self
+        tableView.delegate = self
 
         // Initialize the UISearchBar
         searchBar = UISearchBar()
@@ -27,6 +32,21 @@ class RepoResultsViewController: UIViewController {
 
         // Perform the first search when the view controller first loads
         doSearch()
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("repoCell", forIndexPath: indexPath) as! GithubRepoViewCell
+        cell.repoName.text = repos[indexPath.row].name
+        
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if let repos = self.repos {
+            return repos.count
+        } else {
+            return 0
+        }
     }
 
     // Perform the search.
@@ -40,7 +60,10 @@ class RepoResultsViewController: UIViewController {
             // Print the returned repositories to the output window
             for repo in newRepos {
                 print(repo)
-            }   
+            }
+            
+            self.repos = newRepos
+            self.tableView.reloadData();
 
             MBProgressHUD.hideHUDForView(self.view, animated: true)
             }, error: { (error) -> Void in
@@ -51,7 +74,6 @@ class RepoResultsViewController: UIViewController {
 
 // SearchBar methods
 extension RepoResultsViewController: UISearchBarDelegate {
-
     func searchBarShouldBeginEditing(searchBar: UISearchBar) -> Bool {
         searchBar.setShowsCancelButton(true, animated: true)
         return true;
